@@ -1,0 +1,41 @@
+name: Publicar site (GitHub Pages)
+
+# Publica a pasta site/ no GitHub Pages. Roda a cada mudança em site/, depois do workflow de dados
+# e sob demanda (aba Actions > Run workflow).
+on:
+  workflow_run:
+    workflows: ["Dados extra (anos 2002-2024)"]
+    types: [completed]
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["site/**"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
