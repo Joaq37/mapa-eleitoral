@@ -113,6 +113,8 @@ const PCOR = { PT:"#d62839", PL:"#2d5fd0", PSD:"#f2a900", MDB:"#12a37f", "UNIÃO
   // siglas de eleições anteriores
   PSL:"#2d5fd0", PMDB:"#12a37f", DEM:"#6aa84f", PR:"#3b5bb5", PSC:"#2f7d4f", PTB:"#7a5c2e", PRB:"#1d9bb5", PPS:"#9a6bd0",
   PROS:"#c97b2a", PHS:"#7d8a2e", PRP:"#7a8d3c", PTC:"#566a2e", PMN:"#8c6d46", PEN:"#6c8a96", SD:"#e28a00", PATRI:"#6b9a30",
+  PFL:"#6aa84f", PPB:"#5a6fc9", PRONA:"#8a6d3b", PSDC:"#7a8d3c", PST:"#8c6d46", PTN:"#3fa66b", PAN:"#a07b3c", PGT:"#7d8a2e",
+  PSN:"#8c6d46", PRTB_OLD:"#566a2e", PPR:"#5a6fc9", PSD_OLD:"#f2a900", PT_DO_B:"#b2182b", PDS:"#6c8a96", PCO_OLD:"#a50021",
   PPL:"#a31d6b", PODEMOS:"#3fa66b", "PC DO B":"#b2182b", "PCDOB":"#b2182b" };
 function hashColor(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return `hsl(${h % 360},55%,52%)`; }
 export const partyColor = (p) => PCOR[(p || "").toUpperCase()] || PCOR[p] || hashColor(p || "?");

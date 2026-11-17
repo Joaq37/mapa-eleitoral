@@ -19,12 +19,10 @@ t2i = {int(k): v for k, v in json.load(open(_t2i)).items()}
 muns = json.load(open(OUT / "muns.json", encoding="utf-8"))
 idx = {m[0]: i for i, m in enumerate(muns)}
 CARGO_NOME = {"pres": "Presidente", "pref": "Prefeito", "vere": "Vereador"}
-CONFIG = {
-    2018: dict(cargos={1: "pres"}, chunked=False, per_uf=False),
-    2020: dict(cargos={11: "pref", 13: "vere"}, chunked=True, per_uf=True),
-    2022: dict(cargos={1: "pres"}, chunked=False, per_uf=False),
-    2024: dict(cargos={11: "pref", 13: "vere"}, chunked=True, per_uf=True),
-}
+PRES = dict(cargos={1: "pres"}, chunked=False, per_uf=False)
+MUNI = dict(cargos={11: "pref", 13: "vere"}, chunked=True, per_uf=True)
+CONFIG = {y: PRES for y in (2002, 2006, 2010, 2014, 2018, 2022)}
+CONFIG.update({y: MUNI for y in (2004, 2008, 2012, 2016, 2020, 2024)})
 (OUT / "cand").mkdir(exist_ok=True)
 new_index, new_cands = [], []
 
@@ -80,7 +78,15 @@ def build(year, cfg):
         with zipfile.ZipFile(ANOS / cand_zip).open(m) as f:
             for ch in pd.read_csv(f, sep=";", encoding="latin-1", usecols=cols, chunksize=1_500_000,
                                   dtype={"SQ_CANDIDATO": "int64", "CD_MUNICIPIO": int}):
-                ch = ch[(ch.SG_UF != "ZZ") & ch.CD_CARGO.isin(cargos)]
+                ch = ch[(ch.SG_UF != "ZZ") & ch.CD_CARGO.isin(cargos)].copy()
+                # anos antigos: SQ_CANDIDATO não é único no país -> chave composta (município+cargo+número, ou sequencial+número no caso do Presidente)
+                small = ch.SQ_CANDIDATO < 10 ** 9
+                if small.any():
+                    if per_uf:
+                        new = (ch.CD_MUNICIPIO.astype("int64") * 100 + ch.CD_CARGO.astype("int64")) * 10 ** 6 + ch.NR_CANDIDATO.astype("int64")
+                    else:
+                        new = ch.SQ_CANDIDATO * 100000 + ch.NR_CANDIDATO.astype("int64")
+                    ch["SQ_CANDIDATO"] = ch.SQ_CANDIDATO.where(~small, new)
                 parts.append(ch.groupby(key, as_index=False, dropna=False)[vcol].sum())
         print("  ", m, flush=True)
     allc = pd.concat(parts, ignore_index=True).groupby(key, as_index=False, dropna=False)[vcol].sum().rename(columns={vcol: "V"})
