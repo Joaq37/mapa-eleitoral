@@ -1,0 +1,8 @@
+# dados brutos e intermediários (grandes; regenerados pelo pipeline)
+dados/
+raw_geo/
+pipeline/cache/
+__pycache__/
+*.pyc
+*.zip
+.claude/

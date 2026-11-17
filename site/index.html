@@ -1,0 +1,65 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+  <title>Mapa Eleitoral · Eleições no mapa</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="Resultados das eleições de 2026 no Brasil em mapas: por estado, município, bairro e local de votação, com análise de correlação." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="map"></div>
+
+    <header id="top">
+      <div class="brand"><b>Mapa Eleitoral</b></div>
+      <nav id="nav" aria-label="Seções">
+        <button data-view="map" class="on">Mapa</button>
+        <button data-view="corr">Correlação</button>
+      </nav>
+      <select id="yr" aria-label="Eleição"></select>
+      <select id="uf" aria-label="Estado"></select>
+      <div class="search">
+        <input id="q" type="search" placeholder="Buscar candidato ou município…" autocomplete="off" aria-label="Buscar candidato ou município" />
+        <div id="qres" hidden></div>
+      </div>
+      <div class="tools">
+        <button id="btnBase" title="Alternar mapa de ruas ao fundo" aria-pressed="false">Ruas</button>
+        <button id="btnShare" title="Copiar link desta visualização">Link</button>
+        <button id="btnTheme" title="Alternar tema claro/escuro" aria-label="Alternar tema">◐</button>
+      </div>
+    </header>
+
+    <div id="chips" role="group" aria-label="Modo do mapa"></div>
+
+    <aside id="panel">
+      <nav id="tabs" role="tablist">
+        <button data-tab="map" role="tab">Resultados</button>
+        <button data-tab="city" role="tab">Locais de votação</button>
+      </nav>
+      <div class="body">
+        <section id="tab-map" class="tab"></section>
+        <section id="tab-city" class="tab"></section>
+        <footer class="src">
+          Fonte: <a href="https://dadosabertos.tse.jus.br/" target="_blank" rel="noopener">TSE — Dados Abertos</a> (eleições gerais 2026) e
+          <a href="https://servicodados.ibge.gov.br/api/docs" target="_blank" rel="noopener">IBGE</a> (malhas, Censo 2022, PIB, CEMPRE).
+          Projeto independente, sem vínculo com o TSE.
+        </footer>
+      </div>
+    </aside>
+
+    <section id="view-corr" aria-label="Correlação"><div class="cv"></div></section>
+    <div id="mapcard" hidden></div>
+    <div id="tip" hidden></div>
+    <div id="loading"><div class="spin"></div><p id="loadmsg">Carregando dados…</p></div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
+
