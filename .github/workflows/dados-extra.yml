@@ -1,4 +1,4 @@
-name: Dados extra (anos 2002-2020)
+name: Dados extra (anos 2002-2024)
 
 # Roda no GitHub (nada é baixado para o computador): baixa os dados abertos do TSE,
 # gera os JSONs e faz commit em site/data. Disparo manual: aba Actions > Run workflow.
@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       anos:
-        description: "Anos separados por espaço"
-        default: "2002 2004 2006 2008 2010 2012 2014 2016"
+        description: "Anos separados por espaço (gerais: 2002 2006 2010 2014 2018 2022; municipais: 2004 2008 2012 2016 2020 2024)"
+        default: "2002 2006 2010"
         required: true
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
 jobs:
   gerar:
     runs-on: ubuntu-latest
-    timeout-minutes: 200
+    timeout-minutes: 340
     steps:
       - uses: actions/checkout@v4
 
