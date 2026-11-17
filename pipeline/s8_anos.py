@@ -1,11 +1,12 @@
 """Estágio 8: outros anos (resultados por município).
 
-Uso:  python s8_anos.py [--download] 2018 2020 2022 2024
-  2018 -> Presidente            2020 -> Prefeito e Vereador
-  2022 -> Presidente            2024 -> Prefeito e Vereador
+Uso:  python s8_anos.py [--download] 2002 2004 ... 2024
+  anos gerais (2002, 2006, 2010, 2014, 2018, 2022): Presidente, Governador, Senador, Dep. Federal, Estadual e Distrital
+  anos municipais (2004, 2008, 2012, 2016, 2020, 2024): Prefeito e Vereador
 Com --download baixa os zips do TSE para DATA_DIR (padrão dados/tse_anos); no GitHub Actions usa um diretório temporário.
 """
 import json, os, re, sys, urllib.request, zipfile
+import numpy as np
 import pandas as pd
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
 from common import *
@@ -18,13 +19,19 @@ _t2i = next(p for p in (ROOT / "pipeline" / "tse2ibge.json", CACHE / "tse2ibge.j
 t2i = {int(k): v for k, v in json.load(open(_t2i)).items()}
 muns = json.load(open(OUT / "muns.json", encoding="utf-8"))
 idx = {m[0]: i for i, m in enumerate(muns)}
-CARGO_NOME = {"pres": "Presidente", "pref": "Prefeito", "vere": "Vereador"}
-PRES = dict(cargos={1: "pres"}, chunked=False, per_uf=False)
-MUNI = dict(cargos={11: "pref", 13: "vere"}, chunked=True, per_uf=True)
-CONFIG = {y: PRES for y in (2002, 2006, 2010, 2014, 2018, 2022)}
+CARGO_NOME = {"pres": "Presidente", "gov": "Governador", "sen": "Senador", "dfed": "Deputado Federal", "dest": "Deputado Estadual",
+              "ddist": "Deputado Distrital", "pref": "Prefeito", "vere": "Vereador"}
+CHUNKED = {"dfed", "dest", "ddist", "pref", "vere"}      # candidatos em arquivos por UF (carregados sob demanda)
+INDEXED = {"pres", "gov", "sen", "dfed", "pref"}         # cargos incluídos na busca de candidatos
+GERAL = dict(cargos={1: "pres", 3: "gov", 5: "sen", 6: "dfed", 7: "dest", 8: "ddist"}, mode="geral")
+MUNI = dict(cargos={11: "pref", 13: "vere"}, mode="muni")
+CONFIG = {y: GERAL for y in (2002, 2006, 2010, 2014, 2018, 2022)}
 CONFIG.update({y: MUNI for y in (2004, 2008, 2012, 2016, 2020, 2024)})
+ORDER = {"pres": 0, "gov": 1, "sen": 2, "dfed": 3, "dest": 4, "ddist": 5, "pref": 6, "vere": 7}
+UFNUM = {u: i + 1 for i, u in enumerate(UFS)}
 (OUT / "cand").mkdir(exist_ok=True)
 new_index, new_cands = [], []
+photo_sqs = {}      # ano -> {SQ: uf}  (candidatos a Presidente/Governador/Senador, para baixar as fotos)
 
 
 def fetch(url, dest):
@@ -46,10 +53,10 @@ def header(zipname, member):
 
 
 def build(year, cfg):
-    cargos, chunked, per_uf = cfg["cargos"], cfg["chunked"], cfg["per_uf"]
+    cargos, mode = cfg["cargos"], cfg["mode"]
     sfx = str(year)[2:]
     cand_zip, det_zip = f"votacao_candidato_munzona_{year}.zip", f"detalhe_votacao_munzona_{year}.zip"
-    print(f"== {year}", flush=True)
+    print(f"== {year} ({mode})", flush=True)
     names = set(zipfile.ZipFile(ANOS / cand_zip).namelist())
     det_names = set(zipfile.ZipFile(ANOS / det_zip).namelist())
     # ---- detalhe da apuração (comparecimento)
@@ -64,34 +71,42 @@ def build(year, cfg):
     det = d.groupby(["CD_CARGO", "NR_TURNO", "CD_MUNICIPIO"], as_index=False)[
         ["QT_APTOS", "QT_COMPARECIMENTO", "QT_VOTOS_BRANCOS", "QT_TOTAL_VOTOS_NULOS"]].sum()
     # ---- votos por candidato
-    members = [f"votacao_candidato_munzona_{year}_{u}.csv" for u in UFS] if per_uf else [f"votacao_candidato_munzona_{year}_BR.csv"]
+    if mode == "muni":
+        members = [f"votacao_candidato_munzona_{year}_{u}.csv" for u in UFS]
+    else:   # Presidente vem do arquivo BR; os demais cargos, dos arquivos por UF
+        members = [f"votacao_candidato_munzona_{year}_BR.csv"] + [f"votacao_candidato_munzona_{year}_{u}.csv" for u in UFS]
     members = [m for m in members if m in names]
     if not members:
         raise SystemExit(f"nenhum arquivo encontrado em {cand_zip}: {sorted(names)[:8]}")
     hc = header(cand_zip, members[0])
     vcol = "QT_VOTOS_NOMINAIS_VALIDOS" if "QT_VOTOS_NOMINAIS_VALIDOS" in hc else "QT_VOTOS_NOMINAIS"
-    print("  coluna de votos:", vcol, flush=True)
+    print("  coluna de votos:", vcol, "| arquivos:", len(members), flush=True)
     cols = ["NR_TURNO", "SG_UF", "CD_MUNICIPIO", "CD_CARGO", "SQ_CANDIDATO", "NR_CANDIDATO", "NM_URNA_CANDIDATO", "SG_PARTIDO", vcol, "DS_SIT_TOT_TURNO"]
     key = ["CD_CARGO", "NR_TURNO", "SG_UF", "CD_MUNICIPIO", "SQ_CANDIDATO", "NR_CANDIDATO", "NM_URNA_CANDIDATO", "SG_PARTIDO", "DS_SIT_TOT_TURNO"]
     parts = []
     for m in members:
+        is_br = m.endswith("_BR.csv")
         with zipfile.ZipFile(ANOS / cand_zip).open(m) as f:
             for ch in pd.read_csv(f, sep=";", encoding="latin-1", usecols=cols, chunksize=1_500_000,
                                   dtype={"SQ_CANDIDATO": "int64", "CD_MUNICIPIO": int}):
-                ch = ch[(ch.SG_UF != "ZZ") & ch.CD_CARGO.isin(cargos)].copy()
-                # anos antigos: SQ_CANDIDATO não é único no país -> chave composta (município+cargo+número, ou sequencial+número no caso do Presidente)
+                ch = ch[(ch.SG_UF != "ZZ") & ch.CD_CARGO.isin(cargos)]
+                if mode == "geral":
+                    ch = ch[ch.CD_CARGO == 1] if is_br else ch[ch.CD_CARGO != 1]
+                ch = ch.copy()
+                # anos antigos: SQ_CANDIDATO não é único -> chave composta por abrangência do cargo
                 small = ch.SQ_CANDIDATO < 10 ** 9
                 if small.any():
-                    if per_uf:
-                        new = (ch.CD_MUNICIPIO.astype("int64") * 100 + ch.CD_CARGO.astype("int64")) * 10 ** 6 + ch.NR_CANDIDATO.astype("int64")
-                    else:
-                        new = ch.SQ_CANDIDATO * 100000 + ch.NR_CANDIDATO.astype("int64")
+                    nr = ch.NR_CANDIDATO.astype("int64"); cg = ch.CD_CARGO.astype("int64")
+                    if mode == "muni":
+                        new = (ch.CD_MUNICIPIO.astype("int64") * 100 + cg) * 10 ** 6 + nr
+                    else:   # cargos estaduais: UF + cargo + número; Presidente: sequencial + número
+                        new = np.where(cg == 1, ch.SQ_CANDIDATO * 100000 + nr, (ch.SG_UF.map(UFNUM).fillna(0).astype("int64") * 100 + cg) * 10 ** 6 + nr)
                     ch["SQ_CANDIDATO"] = ch.SQ_CANDIDATO.where(~small, new)
                 parts.append(ch.groupby(key, as_index=False, dropna=False)[vcol].sum())
         print("  ", m, flush=True)
     allc = pd.concat(parts, ignore_index=True).groupby(key, as_index=False, dropna=False)[vcol].sum().rename(columns={vcol: "V"})
     allc["ibge"] = allc.CD_MUNICIPIO.map(t2i)
-    print("  sem ibge:", int(allc.ibge.isna().sum()), flush=True)
+    print("  linhas sem município ibge:", int(allc.ibge.isna().sum()), flush=True)
     allc = allc.dropna(subset=["ibge"]); allc["ibge"] = allc.ibge.astype(int)
     allc["eleito"] = allc.DS_SIT_TOT_TURNO.fillna("").str.upper().str.startswith("ELEITO")
     t2 = {v: k for k, v in t2i.items()}
@@ -99,15 +114,20 @@ def build(year, cfg):
 
     for (cg, tn), df in allc.groupby(["CD_CARGO", "NR_TURNO"]):
         cc = cargos[cg]; kid = f"{cc}{tn}@{sfx}"; fid = kid.replace("@", "_")
+        chunked = cc in CHUNKED
         dd = det[(det.CD_CARGO == cg) & (det.NR_TURNO == tn)].set_index("CD_MUNICIPIO")
         ct = df.groupby("SQ_CANDIDATO").agg(tot=("V", "sum"), nm=("NM_URNA_CANDIDATO", "first"), p=("SG_PARTIDO", "first"),
                                             nr=("NR_CANDIDATO", "first"), uf=("SG_UF", "first"), el=("eleito", "max"),
                                             ib=("ibge", "first")).sort_values("tot", ascending=False)
         ents, emap = [], {}
         if not chunked:
-            for sq, r in ct.iterrows():
+            src = ct if cc == "pres" else ct.sort_values(["uf", "tot"], ascending=[True, False])
+            for sq, r in src.iterrows():
                 emap[("c", sq)] = len(ents)
-                ents.append({"k": f"c{sq}", "n": title(r.nm), "p": r.p, "nr": int(r.nr), "u": None, "t": "c", "tot": int(r.tot), "el": bool(r.el)})
+                ents.append({"k": f"c{sq}", "n": title(r.nm), "p": r.p, "nr": int(r.nr), "u": None if cc == "pres" else r.uf,
+                             "t": "c", "tot": int(r.tot), "el": bool(r.el)})
+                if cc in ("pres", "gov", "sen") and sq > 10 ** 9:
+                    photo_sqs.setdefault(year, {})[int(sq)] = r.uf
         else:
             pt = df.groupby("SG_PARTIDO").V.sum().sort_values(ascending=False)
             for p, v in pt.items():
@@ -124,7 +144,7 @@ def build(year, cfg):
                 jdump({"ents": cents, "m": cm}, OUT / "cand" / f"{fid}_{uf}.json")
         votes = {}
         for r in df.itertuples():
-            ei = emap.get(("c", r.SQ_CANDIDATO)) if not chunked else emap[("p", r.SG_PARTIDO)]
+            ei = emap.get(("p", r.SG_PARTIDO)) if chunked else emap.get(("c", r.SQ_CANDIDATO))
             if ei is None:
                 continue
             dv = votes.setdefault(r.ibge, {}); dv[ei] = dv.get(ei, 0) + int(r.V)
@@ -144,23 +164,28 @@ def build(year, cfg):
         cargo = CARGO_NOME[cc]
         jdump({"id": kid, "cargo": cargo, "cc": cc, "turno": int(tn), "year": year, "ents": ents, "m": rows}, OUT / f"res_{fid}.json")
         new_index.append({"id": kid, "cc": cc, "cargo": cargo, "turno": int(tn), "year": year, "label": f"{cargo} · {tn}º turno · {year}", "n": len(ents)})
-        if cc in ("pres", "pref"):                      # busca de candidatos: presidente e prefeito
+        if cc in INDEXED:                               # busca de candidatos
             for sq, r in ct.iterrows():
                 new_cands.append([kid, "" if cc == "pres" else r.uf, int(sq), title(r.nm), r.p, int(r.nr), int(r.tot), int(bool(r.el)),
-                                  None if cc == "pres" else idx[int(r.ib)]])
+                                  idx[int(r.ib)] if cc == "pref" else None])
 
 
 def fotos(year):
-    """Fotos oficiais do Presidente (pacote BR do TSE), quando existir."""
-    z = ANOS / f"foto_cand{year}_BR_div.zip"
-    if not fetch(f"{CDN}/eleicoes/eleicoes{year}/fotos/foto_cand{year}_BR_div.zip", z):
+    """Fotos oficiais (pacotes por UF do TSE) dos candidatos a Presidente, Governador e Senador, quando existirem."""
+    sqs = photo_sqs.get(year)
+    if not sqs:
         return
     dst = ROOT / "site" / "fotos"; dst.mkdir(parents=True, exist_ok=True); n = 0
-    with zipfile.ZipFile(z) as zf:
-        for info in zf.infolist():
-            m = re.match(r"^F[A-Z]{2}(\d+)_div\.jpg$", info.filename)
-            if m:
-                (dst / f"{m.group(1)}.jpg").write_bytes(zf.read(info)); n += 1
+    for u in ["BR"] + sorted(set(sqs.values())):
+        z = ANOS / f"foto_cand{year}_{u}_div.zip"
+        if not fetch(f"{CDN}/eleicoes/eleicoes{year}/fotos/foto_cand{year}_{u}_div.zip", z):
+            continue
+        with zipfile.ZipFile(z) as zf:
+            for info in zf.infolist():
+                m = re.match(r"^F[A-Z]{2}(\d+)_div\.jpg$", info.filename)
+                if m and int(m.group(1)) in sqs:
+                    (dst / f"{m.group(1)}.jpg").write_bytes(zf.read(info)); n += 1
+        z.unlink(missing_ok=True)
     print("  fotos", year, ":", n, flush=True)
 
 
@@ -175,8 +200,10 @@ if __name__ == "__main__":
             if not ok:
                 raise SystemExit(f"não foi possível baixar os dados de {y}")
         build(y, CONFIG[y])
-        if "pres" in CONFIG[y]["cargos"].values():
-            fotos(y)
+        fotos(y)
+        for z in (ANOS / f"votacao_candidato_munzona_{y}.zip", ANOS / f"detalhe_votacao_munzona_{y}.zip"):
+            if download:
+                z.unlink(missing_ok=True)       # libera disco do runner
 
     # ---- índices: mantém tudo que já existe, regrava só os anos processados agora
     built = set(years)
@@ -188,10 +215,9 @@ if __name__ == "__main__":
             e["label"] = f"{e['cargo']} · {e['turno']}º turno · 2026"
         if e["year"] not in built:
             keep.append(e)
-    order = {"pres": 0, "gov": 1, "sen": 2, "dfed": 3, "dest": 4, "ddist": 5, "pref": 6, "vere": 7}
-    idxs = sorted(keep + new_index, key=lambda e: (-e["year"], order[e["cc"]], e["turno"]))
+    idxs = sorted(keep + new_index, key=lambda e: (-e["year"], ORDER[e["cc"]], e["turno"]))
     jdump(idxs, OUT / "index.json")
     suf = tuple(f"@{str(y)[2:]}" for y in built)
     oc = [c for c in json.load(open(OUT / "cands_index.json", encoding="utf-8")) if not c[0].endswith(suf)]
     jdump(oc + new_cands, OUT / "cands_index.json")
-    print("índice:", [e["id"] for e in idxs], flush=True)
+    print("índice:", len(idxs), "conjuntos;", len(oc) + len(new_cands), "candidatos na busca", flush=True)
