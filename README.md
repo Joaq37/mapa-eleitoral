@@ -1,9 +1,10 @@
-﻿# Mapa Eleitoral
+# Mapa Eleitoral
 
-Site estático (MapLibre + JS puro) com os dados abertos do TSE (eleições gerais 2026), fotos oficiais dos candidatos e
-indicadores do IBGE.
+Site estático (MapLibre + JS puro) com os dados abertos do TSE (eleições de 2002 a 2026), fotos oficiais dos candidatos, emendas parlamentares e indicadores do IBGE.
 
-## Rodar o site
+**Acesse: https://joaq37.github.io/mapa-eleitoral/**
+
+## Rodar localmente
 
 ```bash
 python -m http.server 8765 --directory site
@@ -13,12 +14,28 @@ Abra http://localhost:8765
 
 ## Eleições disponíveis
 
-- **2026** — Presidente, Governador, Senador, Dep. Federal/Estadual/Distrital (1º e 2º turnos).
-- **Eleições presidenciais anteriores (2002, 2006, 2010, 2014, 2018, 2022)** — Presidente, 1º e 2º turnos.
-- **Eleições municipais (2004, 2008, 2012, 2016, 2020, 2024)** — Prefeito (1º e 2º turnos) e Vereador. A lista mostra partidos (com nº de prefeituras ganhas) e, ao clicar num município, os candidatos de lá.
+Clique para abrir o site já na eleição escolhida (dentro do site, o seletor **Eleição** troca de ano e os botões trocam de cargo e turno):
+
+| Ano | Tipo | Abrir direto (1º turno) |
+|---|---|---|
+| **2026** | Federal e estadual | [Presidente](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pres1%22%7D) · [Governador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22gov1%22%7D) · [Senador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22sen1%22%7D) · [Dep. Federal](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dfed1%22%7D) · [Dep. Estadual](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dest1%22%7D) · [Dep. Distrital](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22ddist1%22%7D) |
+| **2022** | Federal e estadual | [Presidente](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pres1%4022%22%7D) |
+| **2018** | Federal e estadual | [Presidente](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pres1%4018%22%7D) · [Governador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22gov1%4018%22%7D) · [Senador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22sen1%4018%22%7D) · [Dep. Federal](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dfed1%4018%22%7D) · [Dep. Estadual](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dest1%4018%22%7D) · [Dep. Distrital](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22ddist1%4018%22%7D) |
+| **2014** | Federal e estadual | [Presidente](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pres1%4014%22%7D) · [Governador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22gov1%4014%22%7D) · [Senador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22sen1%4014%22%7D) · [Dep. Federal](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dfed1%4014%22%7D) · [Dep. Estadual](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dest1%4014%22%7D) · [Dep. Distrital](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22ddist1%4014%22%7D) |
+| **2010** | Federal e estadual | [Presidente](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pres1%4010%22%7D) · [Governador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22gov1%4010%22%7D) · [Senador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22sen1%4010%22%7D) · [Dep. Federal](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dfed1%4010%22%7D) · [Dep. Estadual](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dest1%4010%22%7D) · [Dep. Distrital](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22ddist1%4010%22%7D) |
+| **2006** | Federal e estadual | [Presidente](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pres1%4006%22%7D) · [Governador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22gov1%4006%22%7D) · [Senador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22sen1%4006%22%7D) · [Dep. Federal](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dfed1%4006%22%7D) · [Dep. Estadual](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dest1%4006%22%7D) · [Dep. Distrital](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22ddist1%4006%22%7D) |
+| **2002** | Federal e estadual | [Presidente](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pres1%4002%22%7D) · [Governador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22gov1%4002%22%7D) · [Senador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22sen1%4002%22%7D) · [Dep. Federal](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dfed1%4002%22%7D) · [Dep. Estadual](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22dest1%4002%22%7D) · [Dep. Distrital](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22ddist1%4002%22%7D) |
+| **2024** | Municipal | [Prefeito](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pref1%4024%22%7D) · [Vereador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22vere1%4024%22%7D) |
+| **2020** | Municipal | [Prefeito](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pref1%4020%22%7D) · [Vereador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22vere1%4020%22%7D) |
+| **2016** | Municipal | [Prefeito](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pref1%4016%22%7D) · [Vereador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22vere1%4016%22%7D) |
+| **2012** | Municipal | [Prefeito](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pref1%4012%22%7D) · [Vereador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22vere1%4012%22%7D) |
+| **2008** | Municipal | [Prefeito](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pref1%4008%22%7D) · [Vereador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22vere1%4008%22%7D) |
+| **2004** | Municipal | [Prefeito](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22pref1%4004%22%7D) · [Vereador](https://joaq37.github.io/mapa-eleitoral/#%7B%22ds%22%3A%22vere1%4004%22%7D) |
+
+- Presidente, Governador e Prefeito têm 1º e 2º turnos. Nas eleições municipais, a lista mostra partidos (com nº de prefeituras ganhas) e, ao clicar num município, os candidatos de lá.
 - O botão **Variação vs …** compara o mesmo candidato ou partido entre anos (ex.: Lula 2022 × 2026).
 - **Emendas parlamentares individuais** (Portal da Transparência/CGU) de deputados e senadores que são candidatos em 2026: totais, por ano, por área e mapa dos municípios que receberam recursos.
-- Os dados de 2002 a 2020 foram gerados no GitHub Actions (workflow `dados-extra.yml`), sem baixar os arquivos do TSE para o computador.
+- Os dados de 2002 a 2024 foram gerados no GitHub Actions (workflow `dados-extra.yml`), sem baixar os arquivos do TSE para o computador.
 
 ## Funcionalidades
 
