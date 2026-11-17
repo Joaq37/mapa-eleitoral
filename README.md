@@ -14,11 +14,11 @@ Abra http://localhost:8765
 ## Eleições disponíveis
 
 - **2026** — Presidente, Governador, Senador, Dep. Federal/Estadual/Distrital (1º e 2º turnos).
-- **2024** — Prefeito (1º e 2º turnos; DF não tem) e Vereador. Em eleição municipal a lista mostra partidos (com nº de
-  prefeituras ganhas) e, ao clicar num município, os candidatos de lá.
-- **2022** — Presidente (1º e 2º turnos). Botão "Variação vs …" compara o mesmo candidato entre anos (ex.: Lula 2022 × 2026).
-- **Emendas parlamentares individuais** (Portal da Transparência/CGU) de deputados e senadores que são candidatos em 2026:
-  totais, por ano, por área e mapa dos municípios que receberam recursos (chip "Emendas").
+- **Eleições presidenciais anteriores (2002, 2006, 2010, 2014, 2018, 2022)** — Presidente, 1º e 2º turnos.
+- **Eleições municipais (2004, 2008, 2012, 2016, 2020, 2024)** — Prefeito (1º e 2º turnos) e Vereador. A lista mostra partidos (com nº de prefeituras ganhas) e, ao clicar num município, os candidatos de lá.
+- O botão **Variação vs …** compara o mesmo candidato ou partido entre anos (ex.: Lula 2022 × 2026).
+- **Emendas parlamentares individuais** (Portal da Transparência/CGU) de deputados e senadores que são candidatos em 2026: totais, por ano, por área e mapa dos municípios que receberam recursos.
+- Os dados de 2002 a 2020 foram gerados no GitHub Actions (workflow `dados-extra.yml`), sem baixar os arquivos do TSE para o computador.
 
 ## Funcionalidades
 
