@@ -66,5 +66,3 @@ python s8_anos.py      # Presidente 2022 e Prefeito/Vereador 2024 (dados/tse_ano
 - Emendas: o município é o do favorecido do recurso (arquivo "PorFavorecido"), e só aparecem parlamentares cujo nome de urna
   casa com o de um candidato 2026 a deputado federal ou senador.
 - Correlação entre municípios não implica causalidade nem comportamento individual (falácia ecológica).
-- Projeto independente, sem vínculo com o TSE nem com o Hegemon original; não usa código, layout ou arquivos do site de referência.
-
