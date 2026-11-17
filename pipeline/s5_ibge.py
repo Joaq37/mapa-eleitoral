@@ -73,7 +73,7 @@ for k, nm in ((2776, "brancos"), (2777, "pretos"), (2779, "pardos"), (2778, "ama
 add("r_negros", "% pretos + pardos (Censo 2022)", G_RACA, {k: (cr[2777].get(k) or 0) + (cr[2779].get(k) or 0) for k in cr[2777] if cr[2777].get(k) is not None})
 
 print("religião")
-rl = fetch(9537, 2022, 13495, "133[95263,95277,2826,2827,2836]|2[6794]|58[95253]", by=133)
+rl = fetch(9537, 2022, 1000140, "133[95263,95277,2826,2827,2836]|2[6794]|58[95253]", by=133)   # % do total geral (a var. 13495 só devolvia 100)
 for k, nm in ((95263, "católicos"), (95277, "evangélicos"), (2826, "espíritas"), (2827, "umbanda/candomblé"), (2836, "sem religião")):
     add("rel_" + str(k), f"% {nm} (10+ anos)", G_REL, rl[k])
 

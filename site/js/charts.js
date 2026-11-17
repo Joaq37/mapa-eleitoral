@@ -65,7 +65,7 @@ export class Scatter {
     const c = this.ctx; if (!c || !this.d) return;
     const { l, r, t, b } = this.pad, W = this.W, H = this.H;
     c.clearRect(0, 0, W, H);
-    c.font = "11px 'DM Mono', monospace"; c.fillStyle = css("--muted"); c.strokeStyle = css("--line");
+    c.font = "11px 'IBM Plex Mono', monospace"; c.fillStyle = css("--muted"); c.strokeStyle = css("--line");
     if (!this.pts.length) { c.fillText("Sem dados suficientes para esta combinação", l + 8, H / 2); return; }
     const ticks = (a, z) => { const n = 5, o = []; for (let i = 0; i <= n; i++) o.push(a + (z - a) * i / n); return o; };
     c.lineWidth = 1;

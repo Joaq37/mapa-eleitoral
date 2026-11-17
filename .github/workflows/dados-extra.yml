@@ -1,0 +1,36 @@
+name: Dados extra (2018 e 2020)
+
+# Roda no GitHub (nada é baixado para o seu computador): baixa os dados abertos do TSE,
+# gera os JSONs e faz commit em site/data. Disparo manual: aba Actions > Run workflow.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install pandas numpy
+
+      - name: Baixar do TSE e gerar 2018 (Presidente) e 2020 (Prefeito/Vereador)
+        env:
+          DATA_DIR: ${{ runner.temp }}/tse
+        run: python pipeline/s8_anos.py --download 2018 2020
+
+      - name: Commit dos dados gerados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site
+          git commit -m "Dados 2018 e 2020 (gerados no GitHub Actions)" || echo "nada a commitar"
+          git push

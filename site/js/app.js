@@ -19,8 +19,16 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const normS = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 const CARGO_N = { pres: "Presidente", gov: "Governador", sen: "Senador", dfed: "Dep. Federal", dest: "Dep. Estadual", ddist: "Dep. Distrital", pref: "Prefeito", vere: "Vereador" };
-const CARGOS_YEAR = { 2026: ["pres", "gov", "sen", "dfed", "dest", "ddist"], 2024: ["pref", "vere"], 2022: ["pres"] };
-const ELEICOES = [[2026, "2026 — Federal e estadual"], [2024, "2024 — Municipal"], [2022, "2022 — Federal e estadual"]];
+// anos e cargos disponíveis são derivados do índice de dados (preenchidos em buildYears() após o carregamento)
+let CARGOS_YEAR = {}, ELEICOES = [];
+function buildYears() {
+  const ord = ["pres", "gov", "sen", "dfed", "dest", "ddist", "pref", "vere"];
+  CARGOS_YEAR = {};
+  for (const d of S.index) { const y = d.year || 2026; (CARGOS_YEAR[y] ||= []); if (!CARGOS_YEAR[y].includes(d.cc)) CARGOS_YEAR[y].push(d.cc); }
+  for (const y in CARGOS_YEAR) CARGOS_YEAR[y].sort((a, b) => ord.indexOf(a) - ord.indexOf(b));
+  ELEICOES = Object.keys(CARGOS_YEAR).map(Number).sort((a, b) => b - a)
+    .map((y) => [y, `${y} — ${CARGOS_YEAR[y].some((c) => c === "pref" || c === "vere") ? "Municipal" : "Federal e estadual"}`]);
+}
 const ccOf = (ds) => parseDs(ds).cc, turnoOf = (ds) => parseDs(ds).turno, yearOf = (ds) => parseDs(ds).year;
 
 // ---------------------------------------------------------------- estado
@@ -921,6 +929,7 @@ function applyTheme() {
     await loadAll((p) => (msg.textContent = `Carregando resultados… ${Math.round(p * 100)}%`));
     msg.textContent = "Montando o mapa…";
     GROUPS = varGroups();
+    buildYears();
     loadHash();
     if (!S.ds[state.ds]) state.ds = "pres1";
     if (!state.v) state.v = entVar("pres1", /lula/i) || GROUPS[0].items[0].id;

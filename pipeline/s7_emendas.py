@@ -69,6 +69,40 @@ for k, ai in amap.items():
     if len(lst) >= 1:
         c = max(lst, key=lambda c: c[6])
         links[f"{c[0]}|c{c[2]}"] = ai
+# 2ª passada (conservadora): nomes parecidos, mesma UF, candidato único; ignora títulos (Dr., Delegado...) e exige >= 2 nomes próprios em comum
+TITLES = {"DR", "DRA", "DELEGADO", "DELEGADA", "PROFESSOR", "PROFESSORA", "PROF", "PASTOR", "PASTORA", "CAPITAO", "SARGENTO", "CABO",
+          "CORONEL", "MAJOR", "TENENTE", "ENFERMEIRA", "ENFERMEIRO", "JR", "JUNIOR", "FILHO", "NETO", "DEPUTADO", "DEPUTADA", "DOUTOR",
+          "DOUTORA", "BISPO", "FREI", "PADRE", "SOLDADO", "GENERAL", "DE", "DA", "DO", "DAS", "DOS", "E"}
+def core(s):
+    import unicodedata
+    s = re.sub(r"\(.*?\)", " ", s)
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().upper()
+    return [t for t in re.findall(r"[A-Z0-9]+", s) if t not in TITLES]    # ordenado: o 1º e o último nome precisam coincidir
+taken = set(links.keys())
+cs = [c for c in cands if c[0] in ("dfed1", "sen1")]
+fuzzy = []
+for k, ai in amap.items():
+    if ai in links.values():
+        continue
+    a = authors[ai]
+    at = core(a["n"])
+    if len(at) < 2 or not a["uf"]:
+        continue
+    ms = []
+    for c in cs:
+        if c[1] != a["uf"] or f"{c[0]}|c{c[2]}" in taken:
+            continue
+        ct = core(c[3])
+        if len(ct) < 2 or ct[0] != at[0] or ct[-1] != at[-1]:
+            continue
+        small, big = (set(at), set(ct)) if len(at) <= len(ct) else (set(ct), set(at))
+        if small <= big:
+            ms.append(c)
+    if len(ms) == 1:
+        c = ms[0]; links[f"{c[0]}|c{c[2]}"] = ai; taken.add(f"{c[0]}|c{c[2]}"); fuzzy.append((a["n"], c[3], c[1]))
+print("vínculos por nome aproximado:", len(fuzzy))
+for x in fuzzy[:12]:
+    print("   ", x)
 print("autores:", len(authors), " vinculados a candidatos 2026:", len(links))
 tot = sum(a["pago"] for a in authors)
 print("total pago (individuais):", round(tot / 1e9, 2), "bi; anos:", d.ano.min(), d.ano.max())

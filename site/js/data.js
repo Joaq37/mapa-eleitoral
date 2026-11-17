@@ -109,7 +109,11 @@ const PCOR = { PT:"#d62839", PL:"#2d5fd0", PSD:"#f2a900", MDB:"#12a37f", "UNIÃO
   PCDOB:"#b2182b", "PC do B":"#b2182b", PV:"#4fa831", REDE:"#2c9c6f", CIDADANIA:"#9a6bd0", SOLIDARIEDADE:"#e28a00",
   PRD:"#6e7a8a", AVANTE:"#17b0a7", AGIR:"#8c6d46", MOBILIZA:"#b86c2f", PRTB:"#566a2e", NOVO:"#f48b29", DC:"#7a8d3c",
   MISSÃO:"#ffb400", MISSAO:"#ffb400", UP:"#8b0000", PSTU:"#7f0f2e", PCB:"#a50021", PCO:"#a50021", DEMOCRATA:"#6c8a96",
-  PMB:"#5f8f4a", PATRIOTA:"#6b9a30" };
+  PMB:"#5f8f4a", PATRIOTA:"#6b9a30",
+  // siglas de eleições anteriores
+  PSL:"#2d5fd0", PMDB:"#12a37f", DEM:"#6aa84f", PR:"#3b5bb5", PSC:"#2f7d4f", PTB:"#7a5c2e", PRB:"#1d9bb5", PPS:"#9a6bd0",
+  PROS:"#c97b2a", PHS:"#7d8a2e", PRP:"#7a8d3c", PTC:"#566a2e", PMN:"#8c6d46", PEN:"#6c8a96", SD:"#e28a00", PATRI:"#6b9a30",
+  PPL:"#a31d6b", PODEMOS:"#3fa66b", "PC DO B":"#b2182b", "PCDOB":"#b2182b" };
 function hashColor(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return `hsl(${h % 360},55%,52%)`; }
 export const partyColor = (p) => PCOR[(p || "").toUpperCase()] || PCOR[p] || hashColor(p || "?");
 export const photoUrl = (key) => key && key[0] === "c" ? `fotos/${key.slice(1)}.jpg` : null;
