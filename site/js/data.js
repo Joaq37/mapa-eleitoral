@@ -16,7 +16,8 @@ export const fid = (id) => id.replace("@", "_");
 // "pres1@22" -> { cc: "pres", turno: 1, year: 2022 }; ids sem sufixo são 2026
 export function parseDs(ds) {
   const m = /^([a-z]+)(\d)(?:@(\d\d))?$/.exec(ds);
-  return { cc: m[1], turno: +m[2], year: m[3] ? 2000 + +m[3] : 2026 };
+  const yy = m[3] ? +m[3] : null;           // sufixo de 2 dígitos: 90–99 = 19xx, 00–89 = 20xx
+  return { cc: m[1], turno: +m[2], year: yy == null ? 2026 : yy >= 90 ? 1900 + yy : 2000 + yy };
 }
 export const dsId = (cc, turno, year) => cc + turno + (year === 2026 ? "" : "@" + String(year).slice(2));
 const j = async (p) => { const r = await fetch(p); if (!r.ok) throw new Error(p + " " + r.status); return r.json(); };
