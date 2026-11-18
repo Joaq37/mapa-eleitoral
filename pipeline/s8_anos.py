@@ -25,8 +25,8 @@ CHUNKED = {"dfed", "dest", "ddist", "pref", "vere"}      # candidatos em arquivo
 INDEXED = {"pres", "gov", "sen", "dfed", "pref"}         # cargos incluídos na busca de candidatos
 GERAL = dict(cargos={1: "pres", 3: "gov", 5: "sen", 6: "dfed", 7: "dest", 8: "ddist"}, mode="geral")
 MUNI = dict(cargos={11: "pref", 13: "vere"}, mode="muni")
-CONFIG = {y: GERAL for y in (2002, 2006, 2010, 2014, 2018, 2022)}
-CONFIG.update({y: MUNI for y in (2004, 2008, 2012, 2016, 2020, 2024)})
+CONFIG = {y: GERAL for y in (1994, 1998, 2002, 2006, 2010, 2014, 2018, 2022)}
+CONFIG.update({y: MUNI for y in (1996, 2000, 2004, 2008, 2012, 2016, 2020, 2024)})
 ORDER = {"pres": 0, "gov": 1, "sen": 2, "dfed": 3, "dest": 4, "ddist": 5, "pref": 6, "vere": 7}
 UFNUM = {u: i + 1 for i, u in enumerate(UFS)}
 (OUT / "cand").mkdir(exist_ok=True)
@@ -75,6 +75,8 @@ def build(year, cfg):
         members = [f"votacao_candidato_munzona_{year}_{u}.csv" for u in UFS]
     else:   # Presidente vem do arquivo BR; os demais cargos, dos arquivos por UF
         members = [f"votacao_candidato_munzona_{year}_BR.csv"] + [f"votacao_candidato_munzona_{year}_{u}.csv" for u in UFS]
+    if mode == "geral" and members[0] not in names and f"votacao_candidato_munzona_{year}_BRASIL.csv" in names:
+        members[0] = f"votacao_candidato_munzona_{year}_BRASIL.csv"      # sem arquivo BR: o BRASIL serve de fonte do Presidente
     members = [m for m in members if m in names]
     if not members:
         raise SystemExit(f"nenhum arquivo encontrado em {cand_zip}: {sorted(names)[:8]}")
@@ -85,7 +87,7 @@ def build(year, cfg):
     key = ["CD_CARGO", "NR_TURNO", "SG_UF", "CD_MUNICIPIO", "SQ_CANDIDATO", "NR_CANDIDATO", "NM_URNA_CANDIDATO", "SG_PARTIDO", "DS_SIT_TOT_TURNO"]
     parts = []
     for m in members:
-        is_br = m.endswith("_BR.csv")
+        is_br = m.endswith("_BR.csv") or m.endswith("_BRASIL.csv")
         with zipfile.ZipFile(ANOS / cand_zip).open(m) as f:
             for ch in pd.read_csv(f, sep=";", encoding="latin-1", usecols=cols, chunksize=1_500_000,
                                   dtype={"SQ_CANDIDATO": "int64", "CD_MUNICIPIO": int}):
@@ -164,7 +166,7 @@ def build(year, cfg):
         cargo = CARGO_NOME[cc]
         jdump({"id": kid, "cargo": cargo, "cc": cc, "turno": int(tn), "year": year, "ents": ents, "m": rows}, OUT / f"res_{fid}.json")
         new_index.append({"id": kid, "cc": cc, "cargo": cargo, "turno": int(tn), "year": year, "label": f"{cargo} · {tn}º turno · {year}", "n": len(ents)})
-        if cc in INDEXED:                               # busca de candidatos
+        if cc in INDEXED and (year > 2000 or cc in ("pres", "gov", "sen")):   # busca de candidatos (anos <= 2000: só majoritários, p/ não inflar o índice)
             for sq, r in ct.iterrows():
                 new_cands.append([kid, "" if cc == "pres" else r.uf, int(sq), title(r.nm), r.p, int(r.nr), int(r.tot), int(bool(r.el)),
                                   idx[int(r.ib)] if cc == "pref" else None])
